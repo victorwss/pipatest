@@ -1,0 +1,178 @@
+// Plugins for the build.
+plugins {
+    id "com.github.spotbugs" version "4.2.2"
+    id "java"
+    id "maven-publish"
+    id "application"
+    id "checkstyle"
+}
+
+apply plugin: "com.github.spotbugs"
+apply plugin: "java"
+apply plugin: "application"
+apply plugin: "checkstyle"
+
+// Important meta information.
+description = "Test for PIPA's HTTP-based minigame."
+group = "ninja.javahacker.temp.pipatest"
+version = "1.0"
+mainClassName = "ninja.javahacker.temp.pipatest.Main"
+
+// Some compiler settings.
+ext.javaCompiler = "8"
+ext.doclint = true
+ext.extraCompilerArgs = []
+
+// Versions of some dependencies.
+ext.versionApiguardian = "1.1.0"
+ext.versionCheckstyle = "8.32"
+ext.versionJackson = "2.11.0"
+ext.versionJavalin = "3.8.0"
+ext.versionJcip = "1.0"
+ext.versionJunit = "5.6.1"
+ext.versionSbContrib = "7.4.7"
+ext.versionFindSecBugs = "1.10.1"
+ext.versionSpotBugs = "4.0.3"
+ext.versionSlf4j = "1.8.0-beta4"
+
+// Where to find the dependencies.
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+// Declare the dependencies.
+dependencies {
+
+    // Jackson.
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: versionJackson
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: versionJackson
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: versionJackson
+    implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names', version: versionJackson
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: versionJackson
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: versionJackson
+
+    // Javalin.
+    implementation group: 'io.javalin', name: 'javalin', version: versionJavalin
+
+    // JUnit.
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: versionJunit
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: versionJunit
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: versionJunit
+    testCompileOnly group: 'org.apiguardian', name: 'apiguardian-api', version: versionApiguardian
+
+    // SLF4J.
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: versionSlf4j
+
+    // SpotBugs + plugins.
+    spotbugs group: 'com.github.spotbugs', name: 'spotbugs', version: versionSpotBugs
+    spotbugs configurations.spotbugsPlugins.dependencies
+    implementation group: 'net.jcip', name: 'jcip-annotations', version: versionJcip
+    implementation group: 'com.github.spotbugs', name: 'spotbugs-annotations', version: versionSpotBugs
+    spotbugsPlugins group: 'com.h3xstream.findsecbugs', name: 'findsecbugs-plugin', version: versionFindSecBugs
+    spotbugsPlugins group: 'com.mebigfatguy.sb-contrib', name: 'sb-contrib', version: versionSbContrib
+}
+
+// Checkstyle's stuff.
+checkstyleMain {
+    configFile = rootProject.file("${rootDir}/config/checkstyle/main.xml")
+}
+
+checkstyleTest {
+    configFile = rootProject.file("${rootDir}/config/checkstyle/test.xml")
+}
+
+checkstyle {
+    toolVersion = versionCheckstyle
+    configProperties = [
+        "checkstyle.cache.file": "${buildDir}/checkstyle.cache",
+    ]
+    ignoreFailures = true
+    showViolations = true
+}
+
+// Configure the compile tasks.
+tasks.withType(JavaCompile) {
+    sourceCompatibility = javaCompiler
+    targetCompatibility = javaCompiler
+    options.encoding = "UTF-8"
+    options.debug = true
+    options.fork = true
+    options.compilerArgs << "-parameters" << "-Xlint:all,-processing"
+    extraCompilerArgs.each { e -> options.compilerArgs << e }
+}
+
+compileJava {
+    if (doclint) options.compilerArgs << "-Xdoclint:all"
+    sourceSets {
+        main.java.srcDirs = ['src/main/java']
+        main.resources.srcDirs = ['src/main/resources']
+    }
+}
+
+// Configure the javadoc task.
+tasks.withType(Javadoc) {
+    options.encoding = "UTF-8"
+    options.docEncoding = "UTF-8"
+    options.addBooleanOption('html5', true)
+    options.tags = ["apiNote:a:API Note:", "implSpec:a:Implementation Requirements:", "implNote:a:Implementation Note:"]
+}
+
+// Stuff for SpotBugs.
+spotbugs {
+    toolVersion = versionSpotBugs
+    effort = "max"
+    reportLevel = "low"
+    omitVisitors = ["WeakExceptionMessaging", "OverlyPermissiveMethod"]
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+}
+
+spotbugsTest.enabled = false
+
+// Stuff for JUnit 5.
+test {
+    useJUnitPlatform()
+}
+
+// Stuff for packaging the application.
+jar {
+    duplicatesStrategy = "exclude"
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier "sources"
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier "javadoc"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId jar.baseName
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                developers {
+                    developer {
+                        name = 'Victor Williams Stafusa da Silva'
+                        email = 'victorwssilva@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}
