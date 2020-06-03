@@ -73,7 +73,7 @@ public class FunctionUtils {
     }
 
     /**
-     * Equivalent of {@link Supplier} where the functional method might also throw any exception in the functional.
+     * Equivalent of {@link Supplier} where the functional method might also throw any exception.
      * @param <T> The type of results supplied by this supplier.
      */
     @FunctionalInterface
