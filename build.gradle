@@ -22,6 +22,7 @@ mainClassName = "ninja.javahacker.temp.pipatest.Main"
 ext.javaCompiler = "8"
 ext.doclint = true
 ext.extraCompilerArgs = []
+ext.artifactName = "pipa-test"
 
 // Versions of some dependencies.
 ext.versionApiguardian = "1.1.0"
@@ -167,7 +168,7 @@ task javadocJar(type: Jar) {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId jar.baseName
+            artifactId artifactName
             from components.java
             artifact sourcesJar
             artifact javadocJar
