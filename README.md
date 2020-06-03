@@ -16,7 +16,7 @@ In order to build and run the solution, you will need to have:
 
 - To run all the tests on it (JUnit, Checkstyle and SpotBugs), execute the following command: `gradle check tests`<br>WARNING: this may take up several minutes.
 
-- To produce all the Javadoc's documentation, run this: `gradle javadoc`
+- To produce all the Javadoc's documentation, run this: `gradle javadoc`<BR>NOTE: After it is generated, you might find it out the javadocs in the `./build/docs/javadoc/` folder.
 
 - If you want to perform all the above tasks in a single run, execute just this: `gradle build javadoc run`
 
