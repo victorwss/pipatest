@@ -2,7 +2,6 @@ package ninja.javahacker.temp.pipatest.data;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.javalin.plugin.json.JavalinJson;
 import java.util.Objects;
 import net.jcip.annotations.Immutable;
@@ -69,7 +68,7 @@ public final class UserData {
      * @return {@code true} if this object is equal to the other, {@code false} otherwise.
      */
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
         if (!(other instanceof UserData)) return false;
         UserData that = (UserData) other;
         return this.points == that.points && this.userId == that.userId;

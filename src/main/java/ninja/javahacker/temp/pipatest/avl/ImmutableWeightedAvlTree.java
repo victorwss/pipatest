@@ -374,7 +374,7 @@ public class ImmutableWeightedAvlTree<K extends Comparable<K>, V> {
                     ? OptionalInt.of(nodeWeight)
                     : Optional.ofNullable(cmp > 0 ? rightChild : leftChild)
                             .map(c -> c.getNodeWeight(findingKey))
-                            .orElse(OptionalInt.empty());
+                            .orElseGet(OptionalInt::empty);
         }
 
         /**

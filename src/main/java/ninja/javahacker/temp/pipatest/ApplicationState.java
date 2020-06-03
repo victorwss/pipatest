@@ -2,6 +2,7 @@ package ninja.javahacker.temp.pipatest;
 
 import edu.umd.cs.findbugs.annotations.CheckReturnValue;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import ninja.javahacker.temp.pipatest.data.UserData;
  * @author Victor Williams Stafusa da Silva
  */
 @Immutable
+@SuppressFBWarnings("IMC_IMMATURE_CLASS_NO_TOSTRING")
 public final class ApplicationState {
 
     /**
@@ -95,12 +97,12 @@ public final class ApplicationState {
         Optional<Long> optCurrentPoints = usersToPoints.get(id);
         long currentPoints = optCurrentPoints.orElse(0L);
 
-        // If the user already existed and got zero new points, there is no change after all.
-        if (optCurrentPoints.isPresent() && earnedPoints == 0) return this;
-
         // If the user already existed, we need to delete it from the newPointsToUsers tree first before re-adding it.
         // We don't need to caare bout deleting it from the usersToPoints because the number of points will be replaced anyway.
         if (optCurrentPoints.isPresent()) {
+
+            // If the user already existed and got zero new points, there is no change after all.
+            if (earnedPoints == 0) return this;
 
             // Remove it from the internal trees of the sketch of the pointsToUsers.
             // Complexity of this step is two O(log n) operations.
@@ -124,7 +126,7 @@ public final class ApplicationState {
         // This have a complexity of O(log n).
         ImmutableWeightedAvlTree<Long, Dummy> usersWithThatManyPointsNew = newPointsToUsers
                 .get(currentPoints + earnedPoints)
-                .orElse(new ImmutableWeightedAvlTree<>());
+                .orElseGet(ImmutableWeightedAvlTree::new);
 
         // Then, add the user in the internal tree. Complexity is O(log n).
         usersWithThatManyPointsNew = usersWithThatManyPointsNew.put(id, 1, Dummy.DUMMY);
@@ -158,6 +160,16 @@ public final class ApplicationState {
     }
 
     /**
+     * Used to stop collecting new users data.
+     * @author Victor Williams Stafusa da Silva
+     */
+    private static class StopIt extends RuntimeException {
+
+        /** Important for serialization. */
+        private static final long serialVersionUID = 1L;
+    }
+
+    /**
      * Creates an object containing a list of the topmost users and their scores and positions. Tied users are shown with the same
      * position ordered by their user id. The user with the most points is presented in position one.
      * @param maxUsers The maximum number of users that we want to get listed.
@@ -166,16 +178,6 @@ public final class ApplicationState {
     @NonNull
     @CheckReturnValue
     public HighscoresTableData getHighScores(int maxUsers) {
-
-        /**
-         * Stops collecting new users data.
-         * @author Victor Williams Stafusa da Silva
-         */
-        class StopIt extends RuntimeException {
-
-            /** Important for serialization. */
-            private static final long serialVersionUID = 1L;
-        }
 
         // We will collect the users' data here. Constructs the list with the proper size.
         List<PositionedUserData> output = new ArrayList<>(Math.max(maxUsers, usersToPoints.getTotalWeight()));

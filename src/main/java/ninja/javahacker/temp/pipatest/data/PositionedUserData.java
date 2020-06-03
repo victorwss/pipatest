@@ -1,7 +1,6 @@
 package ninja.javahacker.temp.pipatest.data;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.javalin.plugin.json.JavalinJson;
 import java.util.Objects;
 
@@ -80,7 +79,7 @@ public final class PositionedUserData {
      * @return {@code true} if this object is equal to the other, {@code false} otherwise.
      */
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
         if (!(other instanceof PositionedUserData)) return false;
         PositionedUserData that = (PositionedUserData) other;
         return this.position == that.position && this.points == that.points && this.userId == that.userId;

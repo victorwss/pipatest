@@ -1,7 +1,6 @@
 package ninja.javahacker.temp.pipatest.data;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import io.javalin.plugin.json.JavalinJson;
 import java.util.List;
 import java.util.Objects;
@@ -55,7 +54,7 @@ public final class HighscoresTableData {
      * @return {@code true} if this object is equal to the other, {@code false} otherwise.
      */
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
         if (!(other instanceof HighscoresTableData)) return false;
         HighscoresTableData that = (HighscoresTableData) other;
         return Objects.equals(this.highscores, that.highscores);

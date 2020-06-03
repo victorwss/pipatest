@@ -2,18 +2,30 @@ package ninja.javahacker.temp.pipatest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.javalin.Javalin;
+import io.javalin.http.Context;
 import io.javalin.plugin.json.JavalinJackson;
 import io.javalin.plugin.json.JavalinJson;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import io.javalin.plugin.openapi.OpenApiOptions;
+import io.javalin.plugin.openapi.OpenApiPlugin;
+import io.javalin.plugin.openapi.annotations.HttpMethod;
+import io.javalin.plugin.openapi.annotations.OpenApi;
+import io.javalin.plugin.openapi.annotations.OpenApiContent;
+import io.javalin.plugin.openapi.annotations.OpenApiParam;
+import io.javalin.plugin.openapi.annotations.OpenApiRequestBody;
+import io.javalin.plugin.openapi.annotations.OpenApiResponse;
+import io.javalin.plugin.openapi.ui.SwaggerOptions;
+import io.swagger.v3.oas.models.info.Info;
+import ninja.javahacker.temp.pipatest.data.HighscoresTableData;
+import ninja.javahacker.temp.pipatest.data.PositionedUserData;
 import ninja.javahacker.temp.pipatest.data.UserData;
 
 /**
  * This class is the controller responsible for receiving the HTTP requests for the HTTP-based game highscores table.
  * @author Victor Williams Stafusa da Silva
  */
+@SuppressFBWarnings("IMC_IMMATURE_CLASS_NO_TOSTRING")
 public class GameServer {
 
     /**
@@ -29,10 +41,17 @@ public class GameServer {
     private final Javalin server;
 
     /**
+     * HTTP port tht this request is listening.
+     */
+    private final int port;
+
+    /**
      * Starts the game server.
      * @param port The HTTP port which should be used to run the server.
      */
     public GameServer(int port) {
+        this.port = port;
+
         // Configure Javalin's Jackson instance to make it very strict in rejecting bad JSONs.
         JavalinJackson
                 .getObjectMapper()
@@ -45,27 +64,18 @@ public class GameServer {
                 .findAndRegisterModules();
 
         // Intantiate the highscores table.
-        this.table = new HighscoresTable();
+        this.table = HighscoresTable.getSynchronizedImplementation();
 
         // Instantiates the server with the configured routes.
         this.server = Javalin
                 .create(cfg -> {
+                    cfg.registerPlugin(getOpenApiPlugin());
+                    cfg.defaultContentType = "application/json";
                     cfg.showJavalinBanner = false;
                 })
-                .post("/score",
-                        ctx -> tryRun(
-                                () -> JavalinJson.fromJson(ctx.body(), UserData.class),
-                                table::addScore,
-                                e -> ctx.status(422)
-                        )
-                )
-                .get("/score/:user-id/position",
-                        ctx -> ifPresentOrElse(parseOptionalLong(ctx.pathParam("user-id")),
-                                userId -> ifPresentOrElse(table.findUser(userId), f -> ctx.json(f), () -> ctx.result("")),
-                                () -> ctx.status(404)
-                        )
-                )
-                .get("/highscorelist", ctx -> ctx.json(table.getHighScores(20000)))
+                .post("/score", this::addScore)
+                .get("/score/:userId/position", this::findUser)
+                .get("/highscorelist", this::getHighScores)
                 .start(port);
     }
 
@@ -77,75 +87,89 @@ public class GameServer {
     }
 
     /**
-     * Parses a {@code long} using the {@link Long#parseLong(String)} method, but returns an {@link Optional} containing the parsed value.
-     * If the parse fails, an empty {@link Optional} is returned.
-     * @param toParse The value to be parsed as a long.
-     * @return An {@link Optional} containing the parsed value or an empty {@link Optional} if the parse fails.
+     * Handle the POST "/score" route.
+     * @param ctx The Javalin's context.
      */
-    @NonNull
-    private static Optional<Long> parseOptionalLong(@NonNull String toParse) {
-        try {
-            return Optional.of(Long.parseLong(toParse));
-        } catch (NumberFormatException e) {
-            return Optional.empty();
-        }
+    @OpenApi(
+            summary = "Post a user's score points.",
+            operationId = "addScore",
+            description = "This method can be called several times per user and not return anything. "
+                    + "The points should be added to the user’s current score (score = current score + new points).",
+            path = "/score",
+            method = HttpMethod.POST,
+            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = UserData.class)),
+            responses = {
+                @OpenApiResponse(status = "200"),
+                @OpenApiResponse(status = "422")
+            }
+    )
+    private void addScore(@NonNull Context ctx) {
+        FunctionUtils.tryRun(() -> JavalinJson.fromJson(ctx.body(), UserData.class), table::addScore, e -> ctx.status(422));
     }
 
     /**
-     * If a value is present, performs the given action with the value, otherwise performs the given empty-based action.
-     * <p>Java 9 features the {@code Optional.ifPresentOrElse(Consumer<? super X>, Runnable)} method, but since we are working with
-     * Java 8, this method provides the functionality of that method.</p>
-     * @param <X> The type of the {@link Optional}.
-     * @param what The {@link Optional}
-     * @param receiver The action to be performed, if a value is present.
-     * @param onElse The empty-based action to be performed, if no value is present.
-     * @throws NullPointerException If the value itself is {@code null} or if a value is present and the given action is {@code null},
-     *     or no value is present and the given empty-based action is {@code null}.
+     * Handle the GET "/score/:user-id/position" route.
+     * @param ctx The Javalin's context.
      */
-    private static <X> void ifPresentOrElse(@NonNull Optional<X> what, @NonNull Consumer<? super X> receiver, @NonNull Runnable onElse) {
-        if (what.isPresent()) {
-            receiver.accept(what.get());
-        } else {
-            onElse.run();
-        }
+    @OpenApi(
+            summary = "Get the current position of a user.",
+            operationId = "findUser",
+            description = "Retrieves the current position of a specific user, considering the score for all users. "
+                    + "If a user hasn't submitted a score, the response must be empty.",
+            path = "/score/:userId/position",
+            method = HttpMethod.GET,
+            pathParams = @OpenApiParam(name = "userId", type = long.class, description = "User's id."),
+            responses = {
+                @OpenApiResponse(status = "200", content = @OpenApiContent(from = PositionedUserData.class)),
+                @OpenApiResponse(status = "404")
+            }
+    )
+    private void findUser(@NonNull Context ctx) {
+        FunctionUtils.ifPresentOrElse(
+                FunctionUtils.parseOptionalLong(ctx.pathParam("userId")),
+                userId -> FunctionUtils.ifPresentOrElse(table.findUser(userId), f -> ctx.json(f), () -> ctx.result("")),
+                () -> ctx.status(404)
+        );
     }
 
     /**
-     * Equivalent of {@link Supplier} where the functional method might also throw any exception in the functional.
-     * @param <T> The type of results supplied by this supplier.
+     * Handle the GET "/highscorelist" route.
+     * @param ctx The Javalin's context.
      */
-    @FunctionalInterface
-    private static interface ThrowingSupplier<T> {
-
-        /**
-         * Gets a result.
-         * @return A result.
-         * @throws Throwable If it was not possible to get the result.
-         */
-        public T get() throws Throwable;
+    @OpenApi(
+            summary = "Get a high score list.",
+            operationId = "getHighScores",
+            description = "Retrieves the high scores list, in order, limited to the 20000 higher scores. "
+                    + "A request for a high score list without any scores submitted shall be an empty list.",
+            path = "/highscorelist",
+            method = HttpMethod.GET,
+            responses = @OpenApiResponse(status = "200", content = @OpenApiContent(from = HighscoresTableData.class))
+    )
+    private void getHighScores(@NonNull Context ctx) {
+        ctx.json(table.getHighScores(20000));
     }
 
     /**
-     * Tries to obtain a value from the given {@link ThrowingSupplier}, and executes one action if it succeeds or the other action if it
-     * does not.
-     * @param <T> The type of object obtained from the {@code func} {@link ThrowingSupplier}.
-     * @param func The supplier that will give out some object.
-     * @param ifOk The action to be performed with the value obtained from the {@code func} {@link ThrowingSupplier}.
-     * @param cons The action to be performed with the exception obtained from the failure of the execution of the {@code func}
-     *     {@link ThrowingSupplier}.
+     * Register the swagger's plugin into Javalin.
+     * @return Javalin's open API plugin.
      */
-    private static <T> void tryRun(
-            @NonNull ThrowingSupplier<T> func,
-            @NonNull Consumer<? super T> ifOk,
-            @NonNull Consumer<? super Throwable> cons)
-    {
-        T out;
-        try {
-            out = func.get();
-        } catch (Throwable e) {
-            cons.accept(e);
-            return;
-        }
-        ifOk.accept(out);
+    private OpenApiPlugin getOpenApiPlugin() {
+        Info info = new Info()
+                .version("1.0")
+                .title("Highscores game server")
+                .description("Highscores game server.");
+        OpenApiOptions options = new OpenApiOptions(info)
+                .activateAnnotationScanningFor("ninja.javahacker.temp.pipatest")
+                .path("/swagger-docs")
+                .swagger(new SwaggerOptions("/swagger-ui").title("Highscores game server"));
+        return new OpenApiPlugin(options);
+    }
+
+    /**
+     * Gives the URL where the swagger's documents are published.
+     * @return The URL where the swagger's documents are published.
+     */
+    public String getSwaggerUrl() {
+        return "http://localhost:" + port + "/swagger-ui";
     }
 }

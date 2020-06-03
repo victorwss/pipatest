@@ -26,6 +26,7 @@ ext.extraCompilerArgs = []
 // Versions of some dependencies.
 ext.versionApiguardian = "1.1.0"
 ext.versionCheckstyle = "8.32"
+ext.versionClassgraph = "4.8.80"
 ext.versionJackson = "2.11.0"
 ext.versionJavalin = "3.8.0"
 ext.versionJcip = "1.0"
@@ -34,6 +35,8 @@ ext.versionSbContrib = "7.4.7"
 ext.versionFindSecBugs = "1.10.1"
 ext.versionSpotBugs = "4.0.3"
 ext.versionSlf4j = "1.8.0-beta4"
+ext.versionSwaggerUI = "3.25.5"
+ext.versionSwaggerV3 = "2.1.2"
 
 // Where to find the dependencies.
 repositories {
@@ -49,6 +52,7 @@ dependencies {
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: versionJackson
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: versionJackson
     implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names', version: versionJackson
+    implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: versionJackson // Needed by Swagger.
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: versionJackson
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: versionJackson
 
@@ -71,6 +75,11 @@ dependencies {
     implementation group: 'com.github.spotbugs', name: 'spotbugs-annotations', version: versionSpotBugs
     spotbugsPlugins group: 'com.h3xstream.findsecbugs', name: 'findsecbugs-plugin', version: versionFindSecBugs
     spotbugsPlugins group: 'com.mebigfatguy.sb-contrib', name: 'sb-contrib', version: versionSbContrib
+
+    // Swagger.
+    implementation group: 'io.swagger.core.v3', name: 'swagger-core', version: versionSwaggerV3
+    implementation group: 'org.webjars', name: 'swagger-ui', version: versionSwaggerUI
+    implementation group: 'io.github.classgraph', name: 'classgraph', version: versionClassgraph
 }
 
 // Checkstyle's stuff.
