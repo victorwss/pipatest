@@ -1,4 +1,4 @@
-package ninja.javahacker.temp.pipatest.tests;
+package ninja.javahacker.temp.pipatest.tests.unit;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,9 +9,20 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Tests for the classes {@link UserData}, {@link PositionedUserData} and {@link HighscoresTableData}.
  * @author Victor Williams Stafusa da Silva
  */
 public class DataTests {
+
+    /**
+     * Test sole constructor.
+     */
+    public DataTests() {
+    }
+
+    /**
+     * Tests the correctness of the instance methods of the {@link UserData}.
+     */
     @Test
     public void testUserData() {
         UserData a = new UserData(123, 456);
@@ -35,6 +46,9 @@ public class DataTests {
         Assertions.assertNotEquals(a.toString(), b.toString());
     }
 
+    /**
+     * Tests the cases where the {@link UserData}'s constructor should throw an exception.
+     */
     @Test
     public void testUserDataBadInstantiation() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new UserData(-1, 456));
@@ -43,6 +57,9 @@ public class DataTests {
         new UserData(0, 5);
     }
 
+    /**
+     * Tests the correctness of the instance methods of the {@link PositionedUserData}.
+     */
     @Test
     public void testPositionedUserData() {
         PositionedUserData a = new PositionedUserData(123, 456, 3);
@@ -68,6 +85,9 @@ public class DataTests {
         Assertions.assertNotEquals(a.toString(), b.toString());
     }
 
+    /**
+     * Tests the cases where the {@link PositionedUserData}'s constructor should throw an exception.
+     */
     @Test
     public void testPositionedUserDataBadInstantiation() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new PositionedUserData(-1, 456, 3));
@@ -77,6 +97,9 @@ public class DataTests {
         new PositionedUserData(0, 0, 1);
     }
 
+    /**
+     * Tests the correctness of the instance methods of the {@link HighscoresTableData}.
+     */
     @Test
     public void testHighscoresTableData() {
         PositionedUserData a = new PositionedUserData(555, 888, 1);
@@ -119,6 +142,9 @@ public class DataTests {
         Assertions.assertEquals("{\"highscores\":[" + g + "," + h + "," + i + "]}", h3.toString());
     }
 
+    /**
+     * Tests the cases where the {@link HighscoresTableData}'s constructor should throw an exception.
+     */
     @Test
     public void testHighscoresTableDataBadInstantiation() {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new HighscoresTableData(null));

@@ -1,4 +1,4 @@
-package ninja.javahacker.temp.pipatest.tests;
+package ninja.javahacker.temp.pipatest.tests.unit;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for the {@link ImmutableWeightedAvlTree} class.
  * @author Victor Williams Stafusa da Silva
  */
 public class AvlTreeTest {
@@ -22,6 +23,9 @@ public class AvlTreeTest {
     public AvlTreeTest() {
     }
 
+    /**
+     * Simple tests that do a few insertions and traverse the tree to check if the traversal is in the correct order.
+     */
     @Test
     public void testSimpleInsertion() {
         ImmutableWeightedAvlTree<Integer, String> avl = new ImmutableWeightedAvlTree<>();
@@ -38,6 +42,9 @@ public class AvlTreeTest {
         Assertions.assertEquals(in1, in2);
     }
 
+    /**
+     * Tests a lot of insertions, modifications and exclusions in order to check if the traversal is in the correct order.
+     */
     @Test
     public void testManyRandomInsertions() {
         ImmutableWeightedAvlTree<String, String> avl = new ImmutableWeightedAvlTree<>();
@@ -45,6 +52,8 @@ public class AvlTreeTest {
         int prime2 = 101;
         int size = 2000;
 
+        // This madness has the purpose to ensure that the internal structure of the ImmutableWeightedAvlTree would be
+        // unpredictable and force it to perform all the sorts of internal reorganizations.
         Map<String, String> toCheck = new HashMap<>(size);
         for (int i = 0; i < size; i += 4) {
             int j = i + 1;
@@ -69,6 +78,7 @@ public class AvlTreeTest {
             toCheck.put("q" + (i * prime1) + "r", "s" + (i * prime2) + "t");
         }
 
+        // Do a traversal and check if the nodes are in the correct order.
         List<String> desiredKeysAccessShouldBe = new ArrayList<>(new TreeSet<>(toCheck.keySet()));
         List<String> keysAccessed = new ArrayList<>(size);
         avl.forEach((x, y, lw, nd, rw) -> {
@@ -79,22 +89,10 @@ public class AvlTreeTest {
         Assertions.assertEquals(desiredKeysAccessShouldBe, keysAccessed);
     }
 
-    @Test
-    public void testSimpleMutation() {
-        ImmutableWeightedAvlTree<Integer, String> avl = new ImmutableWeightedAvlTree<>();
-        for (int i = 0; i < 20; i++) {
-            avl = avl.put(i, 1, "" + i);
-        }
-        List<Integer> in1 = new ArrayList<>();
-        List<Integer> in2 = new ArrayList<>();
-        avl.forEach((x, y, lw, nd, rw) -> {
-            in1.add(x);
-            in2.add(x);
-        });
-        in1.sort(Integer::compareTo);
-        Assertions.assertEquals(in1, in2);
-    }
-
+    /**
+     * A simple test to catch a bug that happened during the development of the {@code ImmutableWeightedAvlTree} class, due to
+     * a small problem in the tree reorganization when a node was excluded.
+     */
     @Test
     public void testSimpleAddAndRemove() {
         ImmutableWeightedAvlTree<String, String> avl = new ImmutableWeightedAvlTree<>();
@@ -111,10 +109,18 @@ public class AvlTreeTest {
         Assertions.assertEquals("j", out.get());
     }
 
-    private static int sumTo(int x) {
-        return (x * x + x) / 2;
+    /**
+     * Calculates the sum of 1 to n. Used by the {@link AvlTreeTest#testWeightsOnTraversal()} method.
+     * @param n The given number to sum up all the values from 1 to this one.
+     * @return The sum of 1 to n.
+     */
+    private static int sumTo(int n) {
+        return (n * n + n) / 2;
     }
 
+    /**
+     * Test the weights of the nodes during a traversal.
+     */
     @Test
     public void testWeightsOnTraversal() {
         ImmutableWeightedAvlTree<Integer, String> avl = new ImmutableWeightedAvlTree<>();
@@ -134,6 +140,9 @@ public class AvlTreeTest {
         });
     }
 
+    /**
+     * Test the weights of the nodes not during a traversal.
+     */
     @Test
     public void testGetWeights() {
         ImmutableWeightedAvlTree<Integer, String> avl = new ImmutableWeightedAvlTree<>();

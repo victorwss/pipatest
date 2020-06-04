@@ -26,7 +26,7 @@ ext.artifactName = "pipa-test"
 
 // Versions of some dependencies.
 ext.versionApiguardian = "1.1.0"
-ext.versionCheckstyle = "8.32"
+ext.versionCheckstyle = "8.33"
 ext.versionClassgraph = "4.8.80"
 ext.versionJackson = "2.11.0"
 ext.versionJavalin = "3.8.0"
@@ -148,6 +148,13 @@ spotbugsTest.enabled = false
 // Stuff for JUnit 5.
 test {
     useJUnitPlatform()
+    include '**/tests/unit/**'
+}
+
+task performanceTest(type: Test) {
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+    include '**/tests/performance/**'
 }
 
 // Stuff for packaging the application.

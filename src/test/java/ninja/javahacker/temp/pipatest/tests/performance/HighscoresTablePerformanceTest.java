@@ -1,69 +1,40 @@
-package ninja.javahacker.temp.pipatest.tests;
+package ninja.javahacker.temp.pipatest.tests.performance;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import ninja.javahacker.temp.pipatest.HighscoresTable;
-import ninja.javahacker.temp.pipatest.data.HighscoresTableData;
-import ninja.javahacker.temp.pipatest.data.PositionedUserData;
 import ninja.javahacker.temp.pipatest.data.UserData;
+import ninja.javahacker.temp.pipatest.tests.HighscoresTableImplementation;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 /**
+ * Performance/stress tests for the {@link HighscoresTable} implementations.
  * @author Victor Williams Stafusa da Silva
  */
-public class HighscoresTableTest {
+public class HighscoresTablePerformanceTest {
 
     /**
-     * Our two implementations.
+     * Test sole constructor.
      */
-    private enum ImplementationChoice {
-        CAS(HighscoresTable::getCasImplementation),
-        SYNC(HighscoresTable::getSynchronizedImplementation);
-
-        private final Supplier<HighscoresTable> factory;
-
-        private ImplementationChoice(Supplier<HighscoresTable> factory) {
-            this.factory = factory;
-        }
+    public HighscoresTablePerformanceTest() {
     }
 
+    /**
+     * A heavy performance test to measure the time took be a {@link HighscoresTable} under stress.
+     * @param choice An instance of {@link HighscoresTableImplementation} that provides an implementation to the {@link HighscoresTable}
+     *     interface.
+     */
     @ParameterizedTest(name = "{displayName}[{argumentsWithNames}]")
-    @EnumSource(ImplementationChoice.class)
-    @Timeout(value = 5, unit = TimeUnit.SECONDS)
-    void testSimpleUse(ImplementationChoice choice) {
-        HighscoresTable ht = choice.factory.get();
-        ht.addScore(new UserData(555, 70));
-        ht.addScore(new UserData(777, 80));
-        ht.addScore(new UserData(555, 90));
-        ht.addScore(new UserData(888, 80));
-        ht.addScore(new UserData(333, 20));
-
-        List<PositionedUserData> desiredList = new ArrayList<>(5);
-        desiredList.add(new PositionedUserData(555, 160, 1));
-        desiredList.add(new PositionedUserData(777, 80, 2));
-        desiredList.add(new PositionedUserData(888, 80, 2));
-        desiredList.add(new PositionedUserData(333, 20, 4));
-        HighscoresTableData desired = new HighscoresTableData(desiredList);
-        Assertions.assertEquals(desired, ht.getHighScores(1000));
-
-        for (PositionedUserData p : desiredList) {
-            Assertions.assertEquals(p, ht.findUser(p.getUserId()).get());
-        }
-        Assertions.assertFalse(ht.findUser(9999).isPresent());
-    }
-
-    @ParameterizedTest(name = "{displayName}[{argumentsWithNames}]")
-    @EnumSource(ImplementationChoice.class)
+    @EnumSource(HighscoresTableImplementation.class)
     @Timeout(value = 300, unit = TimeUnit.SECONDS)
-    void testHeavyUse(ImplementationChoice choice) {
-        HighscoresTable ht = choice.factory.get();
+    void testHeavyUse(HighscoresTableImplementation choice) {
+        HighscoresTable ht = choice.createTable();
         int numThreads = 50;
         int operationsPerThread = 50_000;
         CyclicBarrier c = new CyclicBarrier(numThreads + 1);

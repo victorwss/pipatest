@@ -1,4 +1,4 @@
-package ninja.javahacker.temp.pipatest.tests;
+package ninja.javahacker.temp.pipatest.tests.unit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,6 +45,9 @@ import org.junit.jupiter.params.provider.EnumSource;
  */
 public class ConcurrencyTest {
 
+    /**
+     * Used to define the number of elements in each implementation to test.
+     */
     private static final int MAX = 100;
 
     /**
