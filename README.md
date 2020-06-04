@@ -40,7 +40,7 @@ In order to build and run the solution, you will need to have:
 
 - For running the application through Gradle without needing to produce a JAR, run the following command: `gradle run`
 
-- To compile and execute all the unit tests on it (JUnit, Checkstyle and SpotBugs), execute the following command: `gradle build`<br>To see the generated reports by those tool, take a look inside the `/build/reports` subfolder within the folder where the project was checked out.
+- To compile and execute all the tests using JUnit (except performance tests), Checkstyle and SpotBugs, execute the following command: `gradle build`<br>To see the generated reports by those tool, take a look inside the `/build/reports` subfolder within the folder where the project was checked out.
 
 - To execute performance tests, execute the following command: `gradle build`<br>WARNING: Those tests are very CPU-intensive and might take several minutes to finish. See below the reasoning for that.
 
