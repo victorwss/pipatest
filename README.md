@@ -4,27 +4,43 @@ In order to build and run the solution, you will need to have:
 - Java ≥ 8 properly installed.
 - Gradle ≥ 6.
 
-## How to build and run it
+## Building and running the application
 
-- First, check-out the project into a folder.
+### How to build it
 
-- To quickly compile and run it, execute the following command in the folder where the project was checked out: `gradle clean asemble run`
+1. Check-out the project into a folder.
 
-- After it starts to run, you might access the URL http://localhost:7002/swagger-ui to interact with the API using the Swagger UI. This also allows you to actually interact with the API. Further, this exposes the URLs used for direct interaction.
+2. Quickly compile it, by executing the following command in the folder where the project was checked out: `gradle clean assemble fatJar`
 
-- If you want to run it, have already compiled it before and don't want to recompile, use just the follwing command: `gradle run`
+3. Grab the `Pipatest-all-1.0.jar` file inside the `/build/libs` subfolder of the folder where the project was checked out and copy that file to wherever you want to.
 
-- To just compile it, without running, execute the following command: `gradle clean assemble`
+### How to run it
 
-- To compile and execute all the tests on it (JUnit, Checkstyle and SpotBugs), execute the following command: `gradle build`<br>WARNING: this may take up several minutes, mainly due to a performance test (see below).
+4. Run the `Pipatest-all-1.0.jar` file (see #3 above) with the `java -jar Pipatest-all-1.0.jar` command. Or perhaps, just click twice the file's icon and your OS might run it.
+
+5. After it starts to run, access the URL http://localhost:7002/swagger-ui and notice that the Swagger UI screen loads allowing you to interact with the API.
+
+6. Use the Swagger UI interface to perform actions in the exposed API. Notice that the Swagger UI exposes the URLs from the underlying API, so you might use the API later without needing to rely on Swagger if you want to.
+
+### Producing Javadocs
 
 - To produce all the Javadoc's documentation, run this: `gradle javadoc`<br>NOTE: After it is generated, you might find it out the javadocs in the `/build/docs/javadoc/` subfolder, inside the folder where the project was checked out.
 
-- If you want to perform all the above tasks in a single run, execute just this: `gradle build javadoc run`<br>WARNING: This may take up several minutes because it includes the aforementioned tests.
+- To package the javadocs inside a JAR file, use this command: `gradle javadocJar`<br>Then, you will be able to locate the JAR file `Pipatest-javadoc-1.0.jar` inside the `/build/libs` subfolder of the folder where the project was checked out.
 
-## Notes about the build
+### Further options about building
 
-The following warning will show up when gradle runs SpotBugs as a part of the build proccess:
+- For running the application through Gradle without needing to produce a JAR, run the follwing command: `gradle run`
+
+- To compile and execute all the unit tests on it (JUnit, Checkstyle and SpotBugs), execute the following command: `gradle build`<br>To see the generated reports by those tool, take a look inside the `/build/reports` subfolder within the folder where the project was checked out.
+
+- To execute performance tests, execute the following command: `gradle build`<br>WARNING: Those tests are very CPU-intensive and might take several minutes to finish. See below the reasoning for that.
+
+- To package the source files inside a JAR file, use this command: `gradle sourcesJar`<br>Then, you will be able to locate the JAR file `Pipatest-sources-1.0.jar` inside the `/build/libs` subfolder of the folder where the project was checked out.
+
+### Notes about the build
+
+The following warning will show up when Gradle runs SpotBugs as a part of the build proccess:
 
 ```
 The following classes needed for analysis were missing:
@@ -100,8 +116,8 @@ guarded variable in order to be able to get the reference to the `ApplicationSta
 Adding a user is more complicated, and needs to either keep the synchronization lock for the duration of all the operation (as in `SynchronizedHighscoresTable`)
 or possible perform many retries due to thread competition (this is what the `AtomicReference` class do internally).
 
-To find out which implementation would be the faster, a performance test (see the method `testHeavyUse` in the test class `HighscoresTableTest`) was designed, creating a large number of threads performing a large operations each at the same time.
-The test showed up that the one stressing `CasHighscoresTable` took roughly 2 minutes and 45 seconds to finish while the one stressing `SynchronizedHighscoresTable` took roughy 2 minutes and 20 seconds. So, the implementation done with `SynchronizedHighscoresTable` was the one used.
+To find out which implementation would be the faster, a performance test (see the method `testHeavyUse` in the test class `HighscoresTableTest`) was designed, creating a large number of threads running at the same time and performing a large number of operations in each thread.
+The test showed up that the one stressing `CasHighscoresTable` took roughly 2 minutes and 45 seconds to finish while the one stressing `SynchronizedHighscoresTable` took roughy 2 minutes and 20 seconds. Of course, several runs will give varying results, but the proportion between running times was always roughly the same. So, the implementation done with `SynchronizedHighscoresTable` was choosen to be actually used. You might re-run those tests with `gradle performanceTest`, but be warned that they are very CPU-intensive and may take several minutes to finish.
 
 ### Servicing HTTP
 
