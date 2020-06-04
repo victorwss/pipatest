@@ -101,7 +101,7 @@ Adding a user is more complicated, and needs to either keep the synchronization 
 or possible perform many retries due to thread competition (this is what the `AtomicReference` claass do internally).
 
 To find out which implementation would be the faster, a performance test (see the method `testHeavyUse` in the test class `HighscoresTableTest`) was designed, creating a large number of threads performing a large operations each at the same time.
-The test showed up that `SynchronizedHighscoresTable` is faster in scenarios of stress, so that was the one used.
+The test showed up that the one stressing `CasHighscoresTable` took roughly 2 minutes and 45 seconds to finish while the one stressing `SynchronizedHighscoresTable` took roughy 2 minutes and 20 seconds. So, the implementation done with `SynchronizedHighscoresTable` was the one used.
 
 ### Servicing HTTP
 
