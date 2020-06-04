@@ -91,20 +91,20 @@ The `ApplicationState` class itself is immutable, so creating a new instance for
 In order to allow the highscores table to change, the `HighscoresTable` interface features two implementation,
 each one with a single reference to an instance of the `ApplicationState` class. This is the only place where an actual mutation happens (instead of creting a new instance based on an older one). Changing the table is just a matter to change that reference.
 
-The two implementations of the `HighscoresTable` interfaace are named `CasHighscoresTable` and `SynchronizedHighscoresTable`.
+The two implementations of the `HighscoresTable` interface are named `CasHighscoresTable` and `SynchronizedHighscoresTable`.
 The `CasHighscoresTable` uses an `AtomicReference` to guard the reference to the `ApplicationState`,
 while the `SynchronizedHighscoresTable` uses synchronization.
 
 In both cases, the operation of traversing the tree or finding out a user need a very brief access to the
 guarded variable in order to be able to get the reference to the `ApplicationState`.
 Adding a user is more complicated, and needs to either keep the synchronization lock for the duration of all the operation (as in `SynchronizedHighscoresTable`)
-or possible perform many retries due to thread competition (this is what the `AtomicReference` claass do internally).
+or possible perform many retries due to thread competition (this is what the `AtomicReference` class do internally).
 
 To find out which implementation would be the faster, a performance test (see the method `testHeavyUse` in the test class `HighscoresTableTest`) was designed, creating a large number of threads performing a large operations each at the same time.
 The test showed up that the one stressing `CasHighscoresTable` took roughly 2 minutes and 45 seconds to finish while the one stressing `SynchronizedHighscoresTable` took roughy 2 minutes and 20 seconds. So, the implementation done with `SynchronizedHighscoresTable` was the one used.
 
 ### Servicing HTTP
 
-Finally, the main class of the application is (unsurpisingly) called `Main`. The class thaat actually uses Javalin in order to serve HTTP requests is the `GameServer` class, which also is responsible for configuring the OpenAPI/Swagger plugin for Javalin.
+Finally, the main class of the application is (unsurpisingly) called `Main`. The class that actually uses Javalin in order to serve HTTP requests is the `GameServer` class, which also is responsible for configuring the OpenAPI/Swagger plugin for Javalin.
 
 The input and output data are serialized and deserialized by Jackson, which maps them to three different classes, namely `UserData`, `PositionedUserData` and `HighscoresTableData`, accordingly to the data format needed by each of the application's endpoint. Those classes are simple immutable carrier of data with no business logic.
