@@ -1,10 +1,16 @@
 # Highscores game server
 
-In order to build and run the solution, you will need to have:
-- Java ≥ 8 properly installed.
-- Gradle ≥ 6.
+Welcome to the highscores game server. This is a HTTP-based mini game back-end developed in Java which registers score points for different users, with the capability to return the current user position and high score list.
 
 ## Building and running the application
+
+### Requirements
+
+In order to build and run the solution, you will need to have:
+
+- Java ≥ 8 properly installed.
+
+- Gradle ≥ 6 properly installed.
 
 ### How to build it
 
@@ -30,9 +36,9 @@ In order to build and run the solution, you will need to have:
 
 ### Further options about building
 
-- To clean up everything from the `build` subdirectory in order to perform a fresh start, run the command `gradle clean` - or, simply just delete the `/build` subfolder.
+- To clean up everything from the `/build` subdirectory in order to perform a fresh start, run the command `gradle clean` - or, simply just delete that subfolder altogether.
 
-- For running the application through Gradle without needing to produce a JAR, run the follwing command: `gradle run`
+- For running the application through Gradle without needing to produce a JAR, run the following command: `gradle run`
 
 - To compile and execute all the unit tests on it (JUnit, Checkstyle and SpotBugs), execute the following command: `gradle build`<br>To see the generated reports by those tool, take a look inside the `/build/reports` subfolder within the folder where the project was checked out.
 
@@ -123,6 +129,6 @@ The test showed up that the one stressing `CasHighscoresTable` took roughly 2 mi
 
 ### Servicing HTTP
 
-Finally, the main class of the application is (unsurpisingly) called `Main`. The class that actually uses Javalin in order to serve HTTP requests is the `GameServer` class, which also is responsible for configuring the OpenAPI/Swagger plugin for Javalin.
+Finally, the main class of the application is (unsurprisingly) called `Main`. The class that actually uses Javalin in order to serve HTTP requests is the `GameServer` class, which also is responsible for configuring the OpenAPI/Swagger plugin for Javalin.
 
 The input and output data are serialized and deserialized by Jackson, which maps them to three different classes, namely `UserData`, `PositionedUserData` and `HighscoresTableData`, accordingly to the data format needed by each of the application's endpoint. Those classes are simple immutable carrier of data with no business logic.
