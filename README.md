@@ -30,6 +30,8 @@ In order to build and run the solution, you will need to have:
 
 ### Further options about building
 
+- To clean up everything from the `build` subdirectory in order to perform a fresh start, run the command `gradle clean` - or, simply just delete the `/build` subfolder.
+
 - For running the application through Gradle without needing to produce a JAR, run the follwing command: `gradle run`
 
 - To compile and execute all the unit tests on it (JUnit, Checkstyle and SpotBugs), execute the following command: `gradle build`<br>To see the generated reports by those tool, take a look inside the `/build/reports` subfolder within the folder where the project was checked out.
